@@ -66,10 +66,19 @@ document.querySelectorAll('.reel__screen video').forEach((video) => {
 /* ---------- Lightbox: tap a grid photo to see it full-size, no caption ---------- */
 const lightbox = document.getElementById('lightbox');
 const lightboxImg = document.getElementById('lightbox-img');
+const lightboxImages = Array.from(document.querySelectorAll('.stay-card img, .gallery-item img'));
+let lightboxIndex = 0;
 
-const openLightbox = (img) => {
+const showLightboxImage = (index) => {
+  lightboxIndex = (index + lightboxImages.length) % lightboxImages.length;
+  const img = lightboxImages[lightboxIndex];
   lightboxImg.src = img.currentSrc || img.src;
   lightboxImg.alt = img.alt || '';
+};
+
+const openLightbox = (img) => {
+  const index = lightboxImages.indexOf(img);
+  showLightboxImage(index === -1 ? 0 : index);
   lightbox.classList.add('is-open');
   lightbox.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
@@ -82,7 +91,10 @@ const closeLightbox = () => {
   document.body.style.overflow = '';
 };
 
-document.querySelectorAll('.stay-card img, .gallery-item img').forEach((img) => {
+const showNextImage = () => showLightboxImage(lightboxIndex + 1);
+const showPrevImage = () => showLightboxImage(lightboxIndex - 1);
+
+lightboxImages.forEach((img) => {
   img.addEventListener('click', () => openLightbox(img));
 });
 
@@ -90,8 +102,20 @@ lightbox.addEventListener('click', (e) => {
   if (e.target === lightbox) closeLightbox();
 });
 lightbox.querySelector('.lightbox__close').addEventListener('click', closeLightbox);
+lightbox.querySelector('.lightbox__next').addEventListener('click', (e) => {
+  e.stopPropagation();
+  showNextImage();
+});
+lightbox.querySelector('.lightbox__prev').addEventListener('click', (e) => {
+  e.stopPropagation();
+  showPrevImage();
+});
+
 window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && lightbox.classList.contains('is-open')) closeLightbox();
+  if (!lightbox.classList.contains('is-open')) return;
+  if (e.key === 'Escape') closeLightbox();
+  if (e.key === 'ArrowRight') showNextImage();
+  if (e.key === 'ArrowLeft') showPrevImage();
 });
 
 /* ---------- Contact form: submit via fetch, show inline status ---------- */
